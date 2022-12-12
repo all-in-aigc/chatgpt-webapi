@@ -203,4 +203,6 @@ under examples folder there are some tests, execute `go test` command and get ou
 
 - Discord Server: [ChatGPT Creators](https://discord.gg/qWshJnJs)
 
-- Wechat Group: [ChatGPT Creators](./images/chatgroup.jpg)
+- Wechat Group: [ChatGPT Creators](https://work.weixin.qq.com/gm/66944e9bd30628e9270c980bc756663d)
+
+![](./images/wechat_group.jpg)
