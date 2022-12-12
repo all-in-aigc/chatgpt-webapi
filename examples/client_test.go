@@ -2,6 +2,7 @@ package examples
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	chatgpt "github.com/chatgp/chatgpt-go"
@@ -17,10 +18,23 @@ func ExampleNewClient() {
 }
 
 func init() {
-	// your __Secure-next-auth.session-token
-	token := `YOUR-SESSION-TOKEN`
+	token := `copy-from-cookies`
+	cfValue := "copy-from-cookies"
+
+	cookies := []*http.Cookie{
+		{
+			Name:  "__Secure-next-auth.session-token",
+			Value: token,
+		},
+		{
+			Name:  "cf_clearance",
+			Value: cfValue,
+		},
+	}
+
 	cli = chatgpt.NewClient(
-		chatgpt.WithToken(token),
-		chatgpt.WithTimeout(30*time.Second),
+		chatgpt.WithDebug(true),
+		chatgpt.WithTimeout(60*time.Second),
+		chatgpt.WithCookies(cookies),
 	)
 }

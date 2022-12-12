@@ -5,49 +5,34 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/launchdarkly/eventsource"
 	"github.com/tidwall/gjson"
 )
 
 // ChatText chat reply with text format
 type ChatText struct {
-	Content        string // text content
 	ConversationID string // conversation context id
 	MessageID      string // current message id, can used as next chat's parent_message_id
+	Content        string // text content
 }
 
 // ChatStream chat reply with sream
 type ChatStream struct {
+	Stream chan *ChatText // chat text stream
+	Err    error          // error message
 }
 
-// GetChatText will return reply text
+// GetChatText will return text message
 func (c *Client) GetChatText(message string, args ...string) (*ChatText, error) {
-	res, err := c.getChatReply(message, args...)
-	if err != nil {
-		return nil, fmt.Errorf("get chat reply failed: %v", err)
-	}
-
-	content := res.Get("message.content.parts.0").String()
-	conversationID := res.Get("conversation_id").String()
-	messageID := res.Get("message.id").String()
-
-	text := &ChatText{
-		Content:        content,
-		ConversationID: conversationID,
-		MessageID:      messageID,
-	}
-
-	return text, nil
-}
-
-// getChatReply will return reply message with json format
-func (c *Client) getChatReply(message string, args ...string) (*gjson.Result, error) {
 	resp, err := c.sendMessage(message, args...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("send message failed: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -58,19 +43,89 @@ func (c *Client) getChatReply(message string, args ...string) (*gjson.Result, er
 
 	arr := strings.Split(string(body), "\n\n")
 
+	const TEXT_ARR_MIN_LEN = 3
+	const TEXT_STR_MIN_LEN = 6
+
 	l := len(arr)
-	if l == 0 {
+	if l < TEXT_ARR_MIN_LEN {
 		return nil, fmt.Errorf("invalid reply message: %s", body)
 	}
 
-	str := arr[l-3]
-	if str == "" || !strings.Contains(str, "data") || str == "data: [DONE]" {
+	str := arr[l-TEXT_ARR_MIN_LEN]
+	if len(str) < TEXT_STR_MIN_LEN {
 		return nil, fmt.Errorf("invalid reply message: %s", body)
 	}
 
-	res := gjson.Parse(str[6:])
+	text := str[TEXT_STR_MIN_LEN:]
 
-	return &res, nil
+	return c.parseChatText(text)
+}
+
+// GetChatStream will return text stream
+func (c *Client) GetChatStream(message string, args ...string) (*ChatStream, error) {
+	resp, err := c.sendMessage(message, args...)
+	if err != nil {
+		return nil, fmt.Errorf("send message failed: %v", err)
+	}
+
+	chatStream := &ChatStream{
+		Stream: make(chan *ChatText),
+		Err:    nil,
+	}
+
+	decoder := eventsource.NewDecoder(resp.Body)
+
+	go func() {
+		defer resp.Body.Close()
+		defer close(chatStream.Stream)
+
+		for {
+			event, err := decoder.Decode()
+			if err != nil {
+				chatStream.Err = fmt.Errorf("decode data failed: %v", err)
+				return
+			}
+
+			text := event.Data()
+			if text == "" || text == EOF_TEXT {
+				// read data finished, success return
+				return
+			}
+
+			chatText, err := c.parseChatText(text)
+			if err != nil {
+				chatStream.Err = fmt.Errorf("parse chat text failed: %v", err)
+				return
+			}
+
+			chatStream.Stream <- chatText
+		}
+	}()
+
+	return chatStream, nil
+}
+
+// parseChatText will return a ChatText struct from ChatText json
+func (c *Client) parseChatText(text string) (*ChatText, error) {
+	if text == "" || text == EOF_TEXT {
+		return nil, fmt.Errorf("invalid chat text: %s", text)
+	}
+
+	res := gjson.Parse(text)
+
+	conversationID := res.Get("conversation_id").String()
+	messageID := res.Get("message.id").String()
+	content := res.Get("message.content.parts.0").String()
+
+	if conversationID == "" || messageID == "" {
+		return nil, fmt.Errorf("invalid chat text")
+	}
+
+	return &ChatText{
+		ConversationID: conversationID,
+		MessageID:      messageID,
+		Content:        content,
+	}, nil
 }
 
 // sendMessage will send message to ChatGPT server
@@ -125,9 +180,12 @@ func (c *Client) sendMessage(message string, args ...string) (*http.Response, er
 		return nil, fmt.Errorf("new request failed: %v", err)
 	}
 
-	bearerToken := fmt.Sprintf("Bearer %s", accessToken)
+	for _, cookie := range c.opts.Cookies {
+		req.AddCookie(cookie)
+	}
+	req.Header.Set("User-Agent", c.opts.UserAgent)
 
-	req.Header.Set("User-Agent", USER_AGENT)
+	bearerToken := fmt.Sprintf("Bearer %s", accessToken)
 	req.Header.Set("Authorization", bearerToken)
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Content-Type", "application/json")
@@ -136,7 +194,17 @@ func (c *Client) sendMessage(message string, args ...string) (*http.Response, er
 		Timeout: c.opts.Timeout,
 	}
 
+	if c.opts.Debug {
+		reqInfo, _ := httputil.DumpRequest(req, true)
+		log.Printf("http request info: \n%s\n", reqInfo)
+	}
+
 	resp, err := cli.Do(req)
+
+	if c.opts.Debug {
+		respInfo, _ := httputil.DumpResponse(resp, true)
+		log.Printf("http response info: \n%s\n", respInfo)
+	}
 
 	return resp, err
 }

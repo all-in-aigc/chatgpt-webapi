@@ -6,38 +6,75 @@ import (
 )
 
 func ExampleClient_GetChatText() {
-	message := "hello"
+	message := "say hello to me"
+
+	log.Printf("start get chat text")
 
 	// chat in independent conversation
 	text, err := cli.GetChatText(message)
 	if err != nil {
 		log.Fatalf("get chat text failed: %v", err)
 	}
-	fmt.Printf("q: %s, a: %s\n", message, text.Content)
 
+	log.Printf("\nq: %s\na: %s\n", message, text.Content)
+
+	fmt.Println("xxx")
 	// Output: xxx
 }
 
-func ExampleClient_GetChatText_WithConversation() {
-	message := "what's golang"
+func ExampleClient_GetContinuousChatText() {
+	message := "say hello to me"
+
+	log.Printf("start get chat text")
 
 	// chat in independent conversation
 	text, err := cli.GetChatText(message)
 	if err != nil {
 		log.Fatalf("get chat text failed: %v", err)
 	}
-	fmt.Printf("q: %s, a: %s\n", message, text.Content)
+
+	log.Printf("\nq: %s\na: %s\n", message, text.Content)
+
+	log.Printf("start get chat text again")
 
 	// continue conversation with new message
 	conversationID := text.ConversationID
 	parentMessage := text.MessageID
-	newMessage := "use it to write hello world"
+	newMessage := "again"
 
 	newText, err := cli.GetChatText(newMessage, conversationID, parentMessage)
 	if err != nil {
 		log.Fatalf("get chat text failed: %v", err)
 	}
-	fmt.Printf("q: %s, a: %s\n", newMessage, newText.Content)
 
+	log.Printf("\nq: %s\na: %s\n", newMessage, newText.Content)
+
+	fmt.Println("xxx")
+	// Output: xxx
+}
+
+func ExampleClient_GetChatStream() {
+	message := "say hello to me"
+
+	log.Printf("start get chat stream")
+
+	stream, err := cli.GetChatStream(message)
+	if err != nil {
+		log.Fatalf("get chat stream failed: %v\n", err)
+	}
+
+	var answer string
+	for text := range stream.Stream {
+		log.Printf("stream text: %s\n", text.Content)
+		answer = text.Content
+	}
+
+	if stream.Err != nil {
+		log.Fatalf("stream closed with error: %v\n", stream.Err)
+	}
+
+	log.Printf("\nq: %s\na: %s\n", message, answer)
+
+	fmt.Println("xxx")
 	// Output: xxx
 }

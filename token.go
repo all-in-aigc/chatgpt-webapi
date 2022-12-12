@@ -1,11 +1,11 @@
 package chatgpt
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // getAccessToken will return accessToken, if expired than fetch a new one
 func (c *Client) getAccessToken() (string, error) {
-	// todo get accessToken from cache
-
 	// fetch new accessToken
 	res, err := c.authSession()
 	if err != nil {
@@ -16,8 +16,6 @@ func (c *Client) getAccessToken() (string, error) {
 	if accessToken == "" {
 		return "", fmt.Errorf("invalid session data: %s", accessToken)
 	}
-
-	// todo set accessToken to cache
 
 	return accessToken, nil
 }
