@@ -1,3 +1,5 @@
+> chatgpt official api is not published yet, this sdk may not work. please use the [GPT-3 SDK](https://github.com/chatgp/gpt3), which is based on [OpenAI GPT-3 openAPI](https://beta.openai.com/docs/api-reference/introduction)
+
 # chatgpt-go
 
 chatgpt sdk writen by golang.

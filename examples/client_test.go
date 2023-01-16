@@ -20,6 +20,7 @@ func ExampleNewClient() {
 func init() {
 	token := `copy-from-cookies`
 	cfValue := "copy-from-cookies"
+	userAgent := "copy-your-user-agent"
 
 	cookies := []*http.Cookie{
 		{
@@ -36,5 +37,6 @@ func init() {
 		chatgpt.WithDebug(true),
 		chatgpt.WithTimeout(60*time.Second),
 		chatgpt.WithCookies(cookies),
+		chatgpt.WithUserAgent(userAgent),
 	)
 }
