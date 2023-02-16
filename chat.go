@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"net/http/httputil"
 	"strings"
 
 	"github.com/google/uuid"
@@ -180,31 +178,12 @@ func (c *Client) sendMessage(message string, args ...string) (*http.Response, er
 		return nil, fmt.Errorf("new request failed: %v", err)
 	}
 
-	for _, cookie := range c.opts.Cookies {
-		req.AddCookie(cookie)
-	}
-	req.Header.Set("User-Agent", c.opts.UserAgent)
-
 	bearerToken := fmt.Sprintf("Bearer %s", accessToken)
 	req.Header.Set("Authorization", bearerToken)
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Content-Type", "application/json")
 
-	cli := &http.Client{
-		Timeout: c.opts.Timeout,
-	}
-
-	if c.opts.Debug {
-		reqInfo, _ := httputil.DumpRequest(req, true)
-		log.Printf("http request info: \n%s\n", reqInfo)
-	}
-
-	resp, err := cli.Do(req)
-
-	if c.opts.Debug {
-		respInfo, _ := httputil.DumpResponse(resp, true)
-		log.Printf("http response info: \n%s\n", respInfo)
-	}
+	resp, err := c.doRequest(req)
 
 	return resp, err
 }

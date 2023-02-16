@@ -15,6 +15,12 @@ type Options struct {
 	UserAgent string
 	// Cookies is request cookies for each api
 	Cookies []*http.Cookie
+	// Cookie will set in request headers with string format
+	Cookie string
+	// Proxy is used to proxy request
+	Proxy string
+	// AccessToken is used to authorization
+	AccessToken string
 }
 
 // Option is used to set custom option
@@ -45,5 +51,26 @@ func WithUserAgent(userAgent string) Option {
 func WithCookies(cookies []*http.Cookie) Option {
 	return func(c *Client) {
 		c.opts.Cookies = cookies
+	}
+}
+
+// WithCookie is used to set request cookies in header
+func WithCookie(cookie string) Option {
+	return func(c *Client) {
+		c.opts.Cookie = cookie
+	}
+}
+
+// WithProxy is used to set request proxy
+func WithProxy(proxy string) Option {
+	return func(c *Client) {
+		c.opts.Proxy = proxy
+	}
+}
+
+// WithAccessToken is used to set accessToken
+func WithAccessToken(accessToken string) Option {
+	return func(c *Client) {
+		c.opts.AccessToken = accessToken
 	}
 }

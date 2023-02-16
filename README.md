@@ -34,9 +34,9 @@ import (
 )
 
 func main() {
-	// new chatgpt client
 	token := `copy-from-cookies`
 	cfValue := "copy-from-cookies"
+	puid := "copy-from-cookies"
 
 	cookies := []*http.Cookie{
 		{
@@ -46,6 +46,10 @@ func main() {
 		{
 			Name:  "cf_clearance",
 			Value: cfValue,
+		},
+		{
+			Name:  "_puid",
+			Value: puid,
 		},
 	}
 

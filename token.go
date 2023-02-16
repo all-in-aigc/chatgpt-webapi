@@ -6,6 +6,10 @@ import (
 
 // getAccessToken will return accessToken, if expired than fetch a new one
 func (c *Client) getAccessToken() (string, error) {
+	if c.opts.AccessToken != "" {
+		return c.opts.AccessToken, nil
+	}
+
 	// fetch new accessToken
 	res, err := c.authSession()
 	if err != nil {
