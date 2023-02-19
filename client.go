@@ -29,8 +29,9 @@ type Client struct {
 func NewClient(options ...Option) *Client {
 	cli := &Client{
 		opts: Options{
-			Timeout:   30 * time.Second, // set default timeout
-			UserAgent: USER_AGENT,       // set default user-agent
+			Timeout:   30 * time.Second,              // set default timeout
+			UserAgent: USER_AGENT,                    // set default user-agent
+			Model:     "text-davinci-002-render-sha", // set default chat model
 		},
 	}
 

@@ -15,6 +15,7 @@ import (
 
 // ChatText chat reply with text format
 type ChatText struct {
+	data           string // event data
 	ConversationID string // conversation context id
 	MessageID      string // current message id, can used as next chat's parent_message_id
 	Content        string // text content
@@ -24,6 +25,11 @@ type ChatText struct {
 type ChatStream struct {
 	Stream chan *ChatText // chat text stream
 	Err    error          // error message
+}
+
+// ChatText format to string
+func (c *ChatText) String() string {
+	return c.data
 }
 
 // GetChatText will return text message
@@ -120,6 +126,7 @@ func (c *Client) parseChatText(text string) (*ChatText, error) {
 	}
 
 	return &ChatText{
+		data:           text,
 		ConversationID: conversationID,
 		MessageID:      messageID,
 		Content:        content,
@@ -150,7 +157,7 @@ func (c *Client) sendMessage(message string, args ...string) (*http.Response, er
 
 	params := MixMap{
 		"action":            "next",
-		"model":             "text-davinci-002-render",
+		"model":             c.opts.Model,
 		"parent_message_id": parentMessageID,
 		"messages": []MixMap{
 			{

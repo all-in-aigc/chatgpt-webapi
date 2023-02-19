@@ -1,4 +1,4 @@
-> chatgpt official api is not published yet, this sdk may not work. please use the [GPT-3 SDK](https://github.com/chatgp/gpt3), which is based on [OpenAI GPT-3 openAPI](https://beta.openai.com/docs/api-reference/introduction)
+> if you want to use [GPT-3](https://beta.openai.com/docs/api-reference/introduction) apis, look at this one: [GPT-3 SDK](https://github.com/chatgp/gpt3),
 
 # chatgpt-go
 
@@ -8,9 +8,9 @@ chatgpt sdk writen by golang.
 
 you should login into the [ChatGPT Website](https://chat.openai.com/chat) firstly, find the Cookies named `cf_clearance`,`__Secure-next-auth.session-token`, and copy their values.
 
-> update your cookies no more than 2 hours.
-
 ![](./images/chatgpt_cookies.png)
+
+> `_puid` cookie is required too, while only plus user can find it in their cookies after login ChatGPT official website.
 
 ## Quick Start
 

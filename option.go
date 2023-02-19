@@ -21,6 +21,8 @@ type Options struct {
 	Proxy string
 	// AccessToken is used to authorization
 	AccessToken string
+	// Model is the chat model
+	Model string
 }
 
 // Option is used to set custom option
@@ -72,5 +74,12 @@ func WithProxy(proxy string) Option {
 func WithAccessToken(accessToken string) Option {
 	return func(c *Client) {
 		c.opts.AccessToken = accessToken
+	}
+}
+
+// WithModel is used to set chat model
+func WithModel(model string) Option {
+	return func(c *Client) {
+		c.opts.Model = model
 	}
 }
