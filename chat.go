@@ -98,8 +98,7 @@ func (c *Client) GetChatStream(message string, args ...string) (*ChatStream, err
 
 			chatText, err := c.parseChatText(text)
 			if err != nil {
-				chatStream.Err = fmt.Errorf("parse chat text failed: %v", err)
-				return
+				continue
 			}
 
 			chatStream.Stream <- chatText
