@@ -12,6 +12,7 @@ const (
 	BASE_URI         = "https://chat.openai.com"
 	AUTH_SESSION_URI = "https://chat.openai.com/api/auth/session"
 	CONVERSATION_URI = "https://chat.openai.com/backend-api/conversation"
+	GET_MODELS_URI   = "https://chat.openai.com/backend-api/models"
 	USER_AGENT       = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
 	EOF_TEXT         = "[DONE]"
 )
@@ -81,9 +82,16 @@ func (c *Client) doRequest(req *http.Request) (*http.Response, error) {
 	resp, err := c.httpCli.Do(req)
 
 	if c.opts.Debug {
-		respInfo, _ := httputil.DumpResponse(resp, true)
+		respInfo, _ := httputil.DumpResponse(resp, false)
 		log.Printf("http response info: \n%s\n", respInfo)
 	}
 
 	return resp, err
+}
+
+// WithModel: set chat model
+func (c *Client) WithModel(model string) *Client {
+	c.opts.Model = model
+
+	return c
 }

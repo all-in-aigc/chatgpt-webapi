@@ -11,7 +11,7 @@ func (c *Client) getAccessToken() (string, error) {
 	}
 
 	// fetch new accessToken
-	res, err := c.authSession()
+	res, err := c.AuthSession()
 	if err != nil {
 		return "", fmt.Errorf("fetch new accessToken failed: %v", err)
 	}

@@ -3,13 +3,14 @@ package chatgpt
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/tidwall/gjson"
 )
 
-// authSession will check if session is expired and return a new accessToken
-func (c *Client) authSession() (*gjson.Result, error) {
+// AuthSession will check if session is expired and return a new accessToken
+func (c *Client) AuthSession() (*gjson.Result, error) {
 	req, err := http.NewRequest(http.MethodGet, AUTH_SESSION_URI, nil)
 	if err != nil {
 		return nil, fmt.Errorf("new request failed: %v", err)
@@ -27,10 +28,11 @@ func (c *Client) authSession() (*gjson.Result, error) {
 		return nil, fmt.Errorf("read response body failed: %v", err)
 	}
 
-	res := gjson.ParseBytes(body)
-	if res.String() == "" {
-		return nil, fmt.Errorf("parse response body failed")
+	if c.opts.Debug {
+		log.Printf("http response info: %s\n", body)
 	}
+
+	res := gjson.ParseBytes(body)
 
 	return &res, nil
 }

@@ -8,24 +8,25 @@ import (
 	chatgpt "github.com/chatgp/chatgpt-go"
 )
 
-// chatgpt client
-var cli *chatgpt.Client
+var (
+	debug        bool
+	accessToken  string
+	sessionToken string
+	cfValue      string
+	puid         string
+)
 
 func ExampleNewClient() {
-	fmt.Printf("%T", cli)
+	fmt.Printf("%T", getClient())
 
 	// Output: *chatgpt.Client
 }
 
-func init() {
-	token := `copy-from-cookies`
-	cfValue := "copy-from-cookies"
-	puid := "copy-from-cookies"
-
+func getClient() *chatgpt.Client {
 	cookies := []*http.Cookie{
 		{
 			Name:  "__Secure-next-auth.session-token",
-			Value: token,
+			Value: sessionToken,
 		},
 		{
 			Name:  "cf_clearance",
@@ -37,9 +38,12 @@ func init() {
 		},
 	}
 
-	cli = chatgpt.NewClient(
-		chatgpt.WithDebug(false),
+	cli := chatgpt.NewClient(
 		chatgpt.WithTimeout(60*time.Second),
+		chatgpt.WithDebug(debug),
+		chatgpt.WithAccessToken(accessToken),
 		chatgpt.WithCookies(cookies),
 	)
+
+	return cli
 }

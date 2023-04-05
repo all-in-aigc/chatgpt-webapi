@@ -6,6 +6,8 @@ import (
 )
 
 func ExampleClient_GetChatText() {
+	cli := getClient()
+
 	message := "say hello to me"
 
 	log.Printf("start get chat text")
@@ -23,6 +25,8 @@ func ExampleClient_GetChatText() {
 }
 
 func ExampleClient_GetContinuousChatText() {
+	cli := getClient()
+
 	message := "say hello to me"
 
 	log.Printf("start get chat text")
@@ -54,18 +58,20 @@ func ExampleClient_GetContinuousChatText() {
 }
 
 func ExampleClient_GetChatStream() {
+	cli := getClient()
+
 	message := "say hello to me"
 
 	log.Printf("start get chat stream")
 
-	stream, err := cli.GetChatStream(message)
+	stream, err := cli.WithModel("gpt-4").GetChatStream(message)
 	if err != nil {
 		log.Fatalf("get chat stream failed: %v\n", err)
 	}
 
 	var answer string
 	for text := range stream.Stream {
-		log.Printf("stream text: %s\n", text.Content)
+		log.Printf("stream text: %s\n", text)
 		answer = text.Content
 	}
 

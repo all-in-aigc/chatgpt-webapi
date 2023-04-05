@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
@@ -16,9 +17,11 @@ import (
 // ChatText chat reply with text format
 type ChatText struct {
 	data           string // event data
-	ConversationID string // conversation context id
-	MessageID      string // current message id, can used as next chat's parent_message_id
-	Content        string // text content
+	ConversationID string `json:"conversation_id"` // conversation context id
+	MessageID      string `json:"message_id"`      // current message id, can used as next chat's parent_message_id
+	Content        string `json:"content"`         // text content
+	Model          string `json:"model"`           // chat model
+	CreatedAt      int64  `json:"created_at"`      // message create_time
 }
 
 // ChatStream chat reply with sream
@@ -27,9 +30,16 @@ type ChatStream struct {
 	Err    error          // error message
 }
 
+// ChatText raw data
+func (c *ChatText) Raw() string {
+	return c.data
+}
+
 // ChatText format to string
 func (c *ChatText) String() string {
-	return c.data
+	b, _ := json.Marshal(c)
+
+	return string(b)
 }
 
 // GetChatText will return text message
@@ -70,6 +80,19 @@ func (c *Client) GetChatStream(message string, args ...string) (*ChatStream, err
 	resp, err := c.sendMessage(message, args...)
 	if err != nil {
 		return nil, fmt.Errorf("send message failed: %v", err)
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+	// not event-strem response
+	if !strings.HasPrefix(contentType, "text/event-stream") {
+		defer resp.Body.Close()
+
+		body, _ := ioutil.ReadAll(resp.Body)
+		if c.opts.Debug {
+			log.Printf("http response info: %s\n", body)
+		}
+
+		return nil, fmt.Errorf("response failed: [%s] %s", resp.Status, body)
 	}
 
 	chatStream := &ChatStream{
@@ -119,6 +142,8 @@ func (c *Client) parseChatText(text string) (*ChatText, error) {
 	conversationID := res.Get("conversation_id").String()
 	messageID := res.Get("message.id").String()
 	content := res.Get("message.content.parts.0").String()
+	model := res.Get("message.metadata.model_slug").String()
+	createdAt := res.Get("message.create_time").Int()
 
 	if conversationID == "" || messageID == "" {
 		return nil, fmt.Errorf("invalid chat text")
@@ -129,6 +154,8 @@ func (c *Client) parseChatText(text string) (*ChatText, error) {
 		ConversationID: conversationID,
 		MessageID:      messageID,
 		Content:        content,
+		Model:          model,
+		CreatedAt:      createdAt,
 	}, nil
 }
 
